@@ -96,7 +96,6 @@ workflows:
       # if using Contexts, add your context below
       - orb-tools/publish-dev:
           orb-name: circleci/ruby
-          context: orb-publishing
           command: | 
                     apt-get update 
                     apt-get upgrade -y 
