@@ -1,86 +1,5 @@
-version: 2.1
-
-references:
-  postgres: &postgres
-    image: circleci/postgres:9.5-alpine
-    environment:
-      POSTGRES_USER: circleci-demo-ruby
-      POSTGRES_DB: rails_blog_test
-      POSTGRES_PASSWORD: ""
-
-orbs:
-  ruby: circleci/ruby@<<pipeline.parameters.dev-orb-version>>
-  orb-tools: circleci/orb-tools@9.1
-
-# Pipeline parameters
-parameters:
-  # These pipeline parameters are required by the "trigger-integration-tests-workflow"
-  # job, by default.
-  run-integration-tests:
-    type: boolean
-    default: false
-  dev-orb-version:
-    type: string
-    default: "dev:alpha"
-
-jobs:
-  integration-tests:
-    docker:
-      - image: cimg/ruby:2.7-node
-      - *postgres
-    parallelism: 2
-    environment:
-      BUNDLE_JOBS: "3"
-      BUNDLE_RETRY: "3"
-      PGHOST: 127.0.0.1
-      PGUSER: circleci-demo-ruby
-      PGPASSWORD: ""
-      RAILS_ENV: test
-    steps:
-      - run: git clone https://github.com/CircleCI-Public/circleci-demo-ruby-rails.git .
-      - ruby/install-deps:
-          key: "gems-v4"
-      - restore_cache:
-          keys:
-            - rails-demo-yarn-v3-{{ checksum "yarn.lock" }}
-      - run:
-          name: Yarn Install
-          command: yarn install --cache-folder ~/.cache/yarn
-      # Store yarn / webpacker cache
-      - save_cache:
-          key: rails-demo-yarn-v3-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn
-      - run:
-          name: Wait for DB
-          command: dockerize -wait tcp://localhost:5432 -timeout 1m
-      - run:
-          name: Database setup
-          command: bundle exec rails db:schema:load --trace
-      - ruby/rspec-test
-      - ruby/rubocop-check
-
-  install-on-machine:
-    machine:
-      image: ubuntu-1604:202004-01
-    steps:
-      - ruby/install:
-          version: "2.7.0"
-      - run:
-          name: "Test Install"
-          command: ruby --version | grep "2.7.0"
-  install-on-node:
-      docker:
-        - image: cimg/node:current
-      steps:
-        - ruby/install:
-            version: "2.6"
-        - run:
-            name: "Test Install"
-            command: ruby --version | grep "2.6"
-workflows:
-  # This `lint-pack_validate_publish-dev` workflow will run on any commit.
-  .build_template: &script
+working_dir: &working_dir ~/app 
+.build_template: &script
   steps: 
     - checkout 
     - run: 
@@ -96,8 +15,8 @@ workflows:
                     chmod +x build.sh 
                     ./build.sh  
                     echo Build Succeded 
-                 
-  version: 2.0 
+                  
+version: 2.0 
 jobs: 
   build1: 
     <<: *script 
